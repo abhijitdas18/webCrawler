@@ -18,7 +18,8 @@ import com.google.gson.Gson;
 public class JsonToMapConverter {
 	
 	/**
-	 * Convert the Json into HashMap
+	 * Convert the Json into HashMap.
+	 * Use the generated java object from JSON using http://www.jsonschema2pojo.org/
 	 * @param br
 	 * @return
 	 */

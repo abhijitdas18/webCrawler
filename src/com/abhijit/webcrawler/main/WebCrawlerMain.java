@@ -9,6 +9,13 @@ import java.util.Scanner;
 import com.abhijit.webcrawler.helper.JsonToMapConverter;
 import com.abhijit.webcrawler.processor.WebPageCrawlerRecursion;
 import com.abhijit.webcrawler.processor.WebPageCrawlerThread;
+/**
+ * The main class to invoke the web crawler application.
+ * The flag "isMultiThreaded" is used to implement using recursion or multi thread.
+ * @author Abhijit
+ *
+ */
+
 public class WebCrawlerMain {
 	
 
@@ -17,14 +24,15 @@ public class WebCrawlerMain {
 		
 		System.out.println("Enter input file name with relative path : ");
 		Scanner myFile = new Scanner(System.in);
-		String file = myFile.nextLine();
-		
+		String file = myFile.nextLine();		
 			
+		// read the json file to process
 		BufferedReader br = new BufferedReader(new FileReader("useCases" + "/" + file));
 		
 		LinkedHashMap<String, ArrayList<String>> myPages = JsonToMapConverter.convertJsonToMap(br);
 		
-		boolean isMultiThreaded = false;
+		// to process the web crawl with recursion or thread
+		boolean isMultiThreaded = true;
 		if(!isMultiThreaded)
 		{
 			WebPageCrawlerRecursion obj = new WebPageCrawlerRecursion();

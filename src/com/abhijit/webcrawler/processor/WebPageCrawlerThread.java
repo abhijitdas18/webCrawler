@@ -7,18 +7,23 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Set;
 
+/**
+ * Process the Json as a LinkedHashMap. Finding the success/skipped/error pages with multi thread.
+ * @author Abhijit
+ *
+ */
 public class WebPageCrawlerThread implements Runnable{
 	
 	static Set<String> successPages = new HashSet<>();
 	static Set<String> skippedPages = new HashSet<>();
 	static Set<String> errorPages = new HashSet<>();
 
-	LinkedHashMap<String, ArrayList<String>> myPages;
-	String aLlink;
+	private LinkedHashMap<String, ArrayList<String>> myPages;
+	private String aLlink;
 	
 	public WebPageCrawlerThread()
 	{
-		
+		// default constructor
 	}
 	
 	public WebPageCrawlerThread(String aLlink,LinkedHashMap<String, ArrayList<String>> myPages)
@@ -28,60 +33,67 @@ public class WebPageCrawlerThread implements Runnable{
 	}
 	
 	
-		
-	public String[] convertSetToArray(Set<String> addresses)
+	/**
+	 * convert a set into Array	
+	 * @param addresses
+	 * @return
+	 */
+	private String[] convertSetToArray(Set<String> addresses)
 	{
 		return addresses.toArray(new String[addresses.size()]);
 	}
 	
-	public void processFirstPageDefault(Set<String> addresses, LinkedHashMap<String, ArrayList<String>> myPages)
+	/**
+	 * The first page always be part of successPage list.
+	 * @param addresses
+	 * @param myPages
+	 */
+	private void processFirstPageDefault(Set<String> addresses, LinkedHashMap<String, ArrayList<String>> myPages)
 	{
 		String[] addressArray = convertSetToArray(addresses);
-		//System.out.println("Array of addresses : " + addressArray);
-
-		//System.out.println("First element of the array of address : " + addressArray[0]);
 
 		List<String> firstPageLinks = myPages.get(addressArray[0]);
-		//System.out.println("firstPageLinks :" + firstPageLinks);
 
 		successPages.add(addressArray[0]);
-		// send the 1st element ( list of links) to process
 		
+		// send each of the links of the 1st page/address to process		
 		for(String aLink : firstPageLinks)
 		{
 			process(aLink, myPages);
 		}
 
-		//System.out.println("1st page done_______________");
 	}
 	
+	/**
+	 * API process the given Map of Pages.
+	 * Iterate the addresses and find the array of link for each address.
+	 * create thread for each link of a address/page. Each thread process async.
+	 * Sleep is required to get the updated vlaue in the success list.
+	 * Thread will be created to process further only for the pages found in success list.
+	 * 
+	 * @param myPages
+	 */
 	public void processPages(LinkedHashMap<String, ArrayList<String>> myPages)
 	{
 		Set<String> addresses = myPages.keySet();
-		//System.out.println("Addresses :" + addresses);
 
 		processFirstPageDefault(addresses, myPages);
 
 		List<String> linkArray = null;
 
 		String[] addressArray = convertSetToArray(addresses);
-		//System.out.println("Pages to be processed :  " + addressArray);
 
 		for (int i = 1; i < addressArray.length; i++) {
-			//System.out.println("Address :::: " + addressArray[i]);
 			try {
-				Thread.sleep(1000);
+				Thread.sleep(1000); //sleep to update the success list
 			} catch (InterruptedException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 			// a page will be processed if it is part of successPage list.
-			//System.out.println("Temrorary Success pages  : " + successPages);
 			if (successPages.contains(addressArray[i])) {
 				linkArray = myPages.get(addressArray[i]);
-				//System.out.println("Links ::::: " + linkArray);
 				for (String link : linkArray) {
-					//System.out.println("Thread started for a link : " + link);
 					Runnable myRuuanble = new WebPageCrawlerThread(link, myPages);
 					Thread t = new Thread(myRuuanble);
 					t.start();
@@ -90,6 +102,7 @@ public class WebPageCrawlerThread implements Runnable{
 			}
 		}
 
+		// sleep is required to finish all the threads before print output.
 		try {
 			Thread.sleep(3000);
 		} catch (InterruptedException e) {
@@ -102,37 +115,34 @@ public class WebPageCrawlerThread implements Runnable{
 	
 	public void run()
 	{
-		//System.out.println("In run() ::: Thread name :" + Thread.currentThread().getName());
-		//System.out.println("In run() ::: A link : " + aLlink);
-		//System.out.println("In run() ::: myPages : " + myPages);
 		process(aLlink, myPages);
 	}
 	
-	public void process(String aLlink, HashMap<String, ArrayList<String>> myPages) {
+	/**
+	 * Finding the link is present in the page or not.
+	 * Update all the output buckets.
+	 * @param aLlink
+	 * @param myPages
+	 */
+	private void process(String aLlink, HashMap<String, ArrayList<String>> myPages) {
 		
-		
-
-		//System.out.println("Process is called.....................");
-		//System.out.println("In process() :::: aLlink : " + aLlink);
-		//System.out.println("In process() :::: MyPages :" + myPages);
-
 		// take each element(link) from the linkArray
 		// check the element is present as a key in HashMap
 
 		if (myPages.containsKey(aLlink) && !successPages.contains(aLlink)) {
-			//System.out.println("The link :::: < " + aLlink + " > is present as key of the HashMap.");
 			successPages.add(aLlink);
 		
 		} else if (!myPages.containsKey(aLlink)) {
-			//System.out.println("The link :::: < " + aLlink + " > is NOT present as key of the HashMap.");
 			errorPages.add(aLlink);
 		} else if (successPages.contains(aLlink)) {
-			//System.out.println("The link :::: < " + aLlink + " > is traversed more than one.");
 			skippedPages.add(aLlink);
 		}
 
 	}
 	
+	/**
+	 * print output
+	 */
 	public void printOutput()
 	{
 		System.out.println("Success: " + successPages);
